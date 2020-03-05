@@ -42,6 +42,9 @@ class GetFromBodyParamTag extends Strategy
                 if (count($bodyParametersFromDocBlock)) {
                     return $bodyParametersFromDocBlock;
                 }
+
+                $bodyParametersFromRequest = $this->getBodyParametersFromRequest($parameterClass, $parameterClassName);
+                if(!empty($bodyParametersFromRequest)) return $bodyParametersFromRequest;
             }
         }
 
@@ -49,6 +52,25 @@ class GetFromBodyParamTag extends Strategy
         $methodDocBlock = RouteDocBlocker::getDocBlocksFromRoute($route)['method'];
 
         return $this->getBodyParametersFromDocBlock($methodDocBlock->getTags());
+    }
+
+    private function getBodyParametersFromRequest($parameterClass, $parameterClassName)
+    {
+        if($parameterClass->hasMethod('rules') && $parameterClass->hasProperty('model')) {
+            $rules = (new $parameterClassName)->rules();
+            $model = factory($parameterClassName::$model)->make();
+            $casts = $model->getCasts();
+            foreach($model->getAttributes() as $attr => $value) {
+                $type = $casts[$attr] ?? 'object';
+                $value = is_null($value) && ! $this->shouldExcludeExample($attr)
+                    ? $this->generateDummyValue($type)
+                    : $value;
+                $description = 'blaa';
+                $required = isset($rules[$attr]) && strpos($rules[$attr], 'required')!==false;
+                $parameters[$attr] = compact('type', 'description', 'required', 'value');
+            }
+            return $parameters;
+        }
     }
 
     private function getBodyParametersFromDocBlock($tags)
