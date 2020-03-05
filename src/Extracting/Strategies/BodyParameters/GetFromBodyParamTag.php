@@ -65,7 +65,7 @@ class GetFromBodyParamTag extends Strategy
                 $value = is_null($value) && ! $this->shouldExcludeExample($attr)
                     ? $this->generateDummyValue($type)
                     : $value;
-                $description = 'blaa';
+                $description = '';
                 $required = isset($rules[$attr]) && strpos($rules[$attr], 'required')!==false;
                 $parameters[$attr] = compact('type', 'description', 'required', 'value');
             }
