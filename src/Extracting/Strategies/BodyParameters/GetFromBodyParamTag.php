@@ -56,21 +56,27 @@ class GetFromBodyParamTag extends Strategy
 
     private function getBodyParametersFromRequest($parameterClass, $parameterClassName)
     {
-        if($parameterClass->hasMethod('rules') && $parameterClass->hasProperty('model')) {
-            $rules = (new $parameterClassName)->rules();
-            $model = factory($parameterClassName::$model)->make();
-            $casts = $model->getCasts();
-            foreach($model->getAttributes() as $attr => $value) {
-                $type = $casts[$attr] ?? 'object';
-                $value = is_null($value) && ! $this->shouldExcludeExample($attr)
-                    ? $this->generateDummyValue($type)
-                    : $value;
-                $description = '';
-                $required = isset($rules[$attr]) && strpos($rules[$attr], 'required')!==false;
-                $parameters[$attr] = compact('type', 'description', 'required', 'value');
-            }
-            return $parameters;
+        if($parameterClass->hasProperty('model')) {
+            $rules = $parameterClass->hasMethod('rules') ? (new $parameterClassName)->rules() : [];
+            return $this->getBodyParametersFromModel($parameterClassName::$model, $rules);
         }
+    }
+
+    private function getBodyParametersFromModel($modelClassName, $rules = [])
+    {
+        $model = factory($modelClassName)->make();
+        $rules = empty($rules) ? $modelClassName::$rules : $rules;
+        $casts = $model->getCasts();
+        foreach($model->getAttributes() as $attr => $value) {
+            $type = $casts[$attr] ?? 'object';
+            $value = is_null($value) && ! $this->shouldExcludeExample($attr)
+                ? $this->generateDummyValue($type)
+                : $value;
+            $description = '';
+            $required = isset($rules[$attr]) && strpos($rules[$attr], 'required')!==false;
+            $parameters[$attr] = compact('type', 'description', 'required', 'value');
+        }
+        return $parameters;
     }
 
     private function getBodyParametersFromDocBlock($tags)
