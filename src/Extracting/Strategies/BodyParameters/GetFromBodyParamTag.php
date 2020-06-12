@@ -46,6 +46,11 @@ class GetFromBodyParamTag extends Strategy
                 $bodyParametersFromRequest = $this->getBodyParametersFromRequest($parameterClass, $parameterClassName);
                 if(!empty($bodyParametersFromRequest)) return $bodyParametersFromRequest;
             }
+
+            if($controller->hasMethod('getModelClass')) {
+                $bodyParametersFromModel = $this->getBodyParametersFromModel($controller->getModelClass());
+                if(!empty($bodyParametersFromModel)) return $bodyParametersFromModel;
+            }
         }
 
         /** @var DocBlock $methodDocBlock */
