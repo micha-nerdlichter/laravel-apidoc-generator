@@ -48,7 +48,8 @@ class GetFromBodyParamTag extends Strategy
             }
 
             if($controller->hasMethod('getModelClass')) {
-                $bodyParametersFromModel = $this->getBodyParametersFromModel($controller->getModelClass());
+                $modelClass = (new $controller->name)->getModelClass();
+                $bodyParametersFromModel = $this->getBodyParametersFromModel($modelClass);
                 if(!empty($bodyParametersFromModel)) return $bodyParametersFromModel;
             }
         }
