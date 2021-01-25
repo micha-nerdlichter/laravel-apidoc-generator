@@ -1,5 +1,6 @@
 .DS_Store
 composer.lock
+*.composer.lock
 .php_cs.cache
 /vendor/
 public/
@@ -13,3 +14,4 @@ docs/_build
 docs/make.bat
 tests/public/docs/
 tests/resources/**
+.phpunit.result.cache

@@ -101,7 +101,7 @@ class GenerateDocumentation extends Command
             $routePath = $generator->getUri($route);
 
             if ($this->isClosureRoute($route->getAction())) {
-                $this->warn(sprintf($messageFormat, 'Skipping', $routeMethods, $routePath).': Closure routes are not supported.');
+                $this->warn(sprintf($messageFormat, 'Skipping', $routeMethods, $routePath) . ': Closure routes are not supported.');
                 continue;
             }
 
@@ -112,12 +112,12 @@ class GenerateDocumentation extends Command
             }
 
             if (! $this->doesControllerMethodExist($routeControllerAndMethod)) {
-                $this->warn(sprintf($messageFormat, 'Skipping', $routeMethods, $routePath).': Controller method does not exist.');
+                $this->warn(sprintf($messageFormat, 'Skipping', $routeMethods, $routePath) . ': Controller method does not exist.');
                 continue;
             }
 
             if (! $this->isRouteVisibleForDocumentation($routeControllerAndMethod)) {
-                $this->warn(sprintf($messageFormat, 'Skipping', $routeMethods, $routePath).': @hideFromAPIDocumentation was specified.');
+                $this->warn(sprintf($messageFormat, 'Skipping', $routeMethods, $routePath) . ': @hideFromAPIDocumentation was specified.');
                 continue;
             }
 
@@ -125,7 +125,7 @@ class GenerateDocumentation extends Command
                 $parsedRoutes[] = $generator->processRoute($route, $routeItem->getRules());
                 $this->info(sprintf($messageFormat, 'Processed', $routeMethods, $routePath));
             } catch (\Exception $exception) {
-                $this->warn(sprintf($messageFormat, 'Skipping', $routeMethods, $routePath).'- Exception '.get_class($exception).' encountered : '.$exception->getMessage());
+                $this->warn(sprintf($messageFormat, 'Skipping', $routeMethods, $routePath) . '- Exception ' . get_class($exception) . ' encountered : ' . $exception->getMessage());
             }
         }
 
@@ -187,18 +187,20 @@ class GenerateDocumentation extends Command
         [$class, $method] = $routeControllerAndMethod;
         $reflection = new ReflectionClass($class);
 
-        $comment = $reflection->getMethod($method)->getDocComment();
+        $tags = collect();
 
-        if ($comment) {
+        foreach (
+            array_filter([
+                $reflection->getDocComment(),
+                $reflection->getMethod($method)->getDocComment()
+            ]) as $comment
+        ) {
             $phpdoc = new DocBlock($comment);
-
-            return collect($phpdoc->getTags())
-                ->filter(function ($tag) {
-                    return $tag->getName() === 'hideFromAPIDocumentation';
-                })
-                ->isEmpty();
+            $tags = $tags->concat($phpdoc->getTags());
         }
 
-        return true;
+        return $tags->filter(function ($tag) {
+            return $tag->getName() === 'hideFromAPIDocumentation';
+        })->isEmpty();
     }
 }
